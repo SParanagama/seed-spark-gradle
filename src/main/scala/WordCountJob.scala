@@ -1,4 +1,3 @@
-import com.twitter.scalding.Args
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -6,12 +5,15 @@ import org.apache.spark.sql.SparkSession
   */
 object WordCountJob {
   def main(args: Array[String]): Unit = {
-    val params = Args(args)
-    val ss = SparkSession.builder().enableHiveSupport().getOrCreate()
-    val textFile = ss.sparkContext.textFile(params.required("input"))
+    val ss = SparkSession.builder()
+                         .master("local[*]")
+                         .getOrCreate()
+
+    val textFile = ss.sparkContext.textFile(args(0))
     val counts = textFile.flatMap(line => line.split(" "))
-      .map(word => (word, 1))
-      .reduceByKey(_ + _)
-    counts.saveAsTextFile(params.required("output"))
+                         .map(word => (word, 1))
+                         .reduceByKey(_ + _)
+
+    counts.saveAsTextFile(args(1))
   }
 }
